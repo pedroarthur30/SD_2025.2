@@ -1,3 +1,5 @@
+package trabalho1
+
 import java.net.ServerSocket
 import java.io.IOException
 
@@ -6,7 +8,6 @@ fun main() {
 
     try {
         // 1. Cria um socket de servidor na porta 9999
-        // O .use garante que o servidor será fechado
         ServerSocket(porta).use { servidorSocket ->
             println("--- Servidor rodando na porta $porta ---")
             println("Aguardando conexão do cliente...")
@@ -18,7 +19,7 @@ fun main() {
             clienteSocket.use { cliente ->
                 println("Cliente conectado: ${cliente.inetAddress.hostAddress}")
 
-                // 4. Pega o InputStream (de onde vamos LER os dados)
+                // 4. Pega o InputStream (de onde LER os dados)
                 val inputStream = cliente.inputStream
 
                 // 5. Lê TODOS os bytes que o cliente enviar

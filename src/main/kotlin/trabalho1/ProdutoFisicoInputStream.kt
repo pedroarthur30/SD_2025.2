@@ -1,3 +1,6 @@
+package trabalho1
+
+import modelo.ProdutoFisico
 import java.io.DataInputStream
 import java.io.EOFException
 import java.io.IOException

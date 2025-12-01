@@ -1,3 +1,6 @@
+package trabalho1
+
+import modelo.ProdutoFisico
 import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
 import java.io.IOException
@@ -14,7 +17,7 @@ fun main() {
 
     println("Iniciando a escrita no stream...")
 
-    try {
+    /*try {
 
         val destino = ByteArrayOutputStream()
 
@@ -35,12 +38,12 @@ fun main() {
 
     } catch (e: IOException) {
         println("Ocorreu um erro ao escrever no stream: ${e.message}")
-    }
+    } */
 
 
     // --- Teste (ii): Arquivo (FileOutputStream) ---
 
-    try {
+    /*try {
 
         val fileDestino = FileOutputStream("produtos.bin")
 
@@ -55,7 +58,7 @@ fun main() {
 
     } catch (e: IOException) {
         println("Erro no Teste (ii): ${e.message}")
-    }
+    } */
 
 
     // --- Teste (iii): Servidor Remoto (TCP) ---

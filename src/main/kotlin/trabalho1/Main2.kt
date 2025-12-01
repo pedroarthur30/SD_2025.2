@@ -1,16 +1,24 @@
+package trabalho1
+
+import modelo.ProdutoFisico
 import java.io.*
+import java.net.ConnectException
+import java.net.Socket
 
 
 fun main() {
-    println("=====================================================")
-    println("INICIANDO TODOS OS TESTES DA QUESTÃO 3 (InputStream)")
-    println("=====================================================")
 
-    testeComMemoria()
+
+   // testeComMemoria()
 
     println("\n-----------------------------------------------------")
 
-    testeComArquivo()
+   // testeComArquivo()
+
+    println("\n-----------------------------------------------------")
+
+    testeComServidor()
+
 }
 
 fun testeComMemoria() {
@@ -57,7 +65,6 @@ fun testeComMemoria() {
     if (produtosOriginais.size == produtosLidos.size &&
         produtosOriginais[0].nome == produtosLidos[0].nome &&
         produtosOriginais[1].preco == produtosLidos[1].preco) {
-        println("\nSUCESSO! Os dados foram lidos da MEMÓRIA corretamente.")
     } else {
         println("\nFALHA! (Memória)")
     }
@@ -95,7 +102,6 @@ fun testeComArquivo() {
 
         val fileOrigem = FileInputStream(NOME_ARQUIVO)
 
-        // Passa o arquivo de origem para o leitor
         ProdutoFisicoInputStream(fileOrigem).use { pojoReader ->
             while (true) {
                 val produtoLido = pojoReader.readProduto() ?: break
@@ -114,11 +120,69 @@ fun testeComArquivo() {
     if (produtosOriginais.size == produtosLidos.size &&
         produtosOriginais[0].nome == produtosLidos[0].nome &&
         produtosOriginais[1].preco == produtosLidos[1].preco) {
-        println("\nSUCESSO! Os dados foram lidos do ARQUIVO corretamente.")
     } else {
         println("\nFALHA! (Arquivo)")
     }
 
     File(NOME_ARQUIVO).delete()
     println("\nArquivo de teste '$NOME_ARQUIVO' removido.")
+}
+
+fun testeComServidor() {
+    println("--- Teste Q2 (Rede): Lendo de SocketInputStream ---")
+
+    val produtosOriginais = arrayOf(
+        ProdutoFisico("P02", "Mouse Óptico", 150.00, 0.2, "MS-LOG-G502"),
+        ProdutoFisico("P01", "Notebook Gamer", 7500.00, 2.5, "NG-XPS-001")
+    )
+    val produtosLidos = mutableListOf<ProdutoFisico>()
+
+    try {
+        Socket("localhost", 9999).use { socket ->
+            println("Conectado ao servidor de eco...")
+
+            println("--- (Rede.1) Escrevendo objetos para o servidor... ---")
+            val outputStreamRede = socket.getOutputStream()
+
+            ProdutoFisicoOutputStream(
+                dados = produtosOriginais,
+                numeroDeObjetos = 2,
+                destino = outputStreamRede,
+            )
+
+
+            socket.shutdownOutput()
+
+            println("\n--- (Rede.2) Lendo 'eco' do servidor... ---")
+            val inputStreamRede = socket.getInputStream()
+
+            ProdutoFisicoInputStream(inputStreamRede).use { pojoReader ->
+                while (true) {
+                    val produtoLido = pojoReader.readProduto() ?: break
+                    println("-> Objeto lido: ${produtoLido.nome} (Preço: ${produtoLido.preco})")
+                    produtosLidos.add(produtoLido)
+                }
+            }
+        }
+
+    } catch (e: ConnectException) {
+        println("!!! ERRO NO TESTE (Rede): Não foi possível conectar.")
+        println("!!! VOCÊ RODOU O ServidorTeste.kt PRIMEIRO?")
+        return
+    } catch (e: IOException) {
+        println("Erro na etapa de LEITURA de REDE: ${e.message}")
+        return
+    }
+
+    println("\n--- (Rede.3) Verificação ---")
+    println("Objetos escritos: ${produtosOriginais.size}")
+    println("Objetos lidos: ${produtosLidos.size}")
+
+    if (produtosOriginais.size == produtosLidos.size &&
+        produtosOriginais[0].nome == produtosLidos[0].nome &&
+        produtosOriginais[1].preco == produtosLidos[1].preco) {
+        println("\nSUCESSO! Os dados foram lidos da REDE corretamente.")
+    } else {
+        println("\nFALHA! (Rede)")
+    }
 }

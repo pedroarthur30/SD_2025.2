@@ -1,3 +1,5 @@
+package modelo
+
 class Loja(
     val nome: String,
     private val catalogo: MutableList<ItemVenda> = mutableListOf()
