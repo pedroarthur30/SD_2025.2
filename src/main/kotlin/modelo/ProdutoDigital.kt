@@ -2,10 +2,10 @@ package modelo
 
 import java.io.Serializable
 
-data class ProdutoDigital(
-    override val id: String,
-    override val nome: String,
-    override val preco: Double,
+class ProdutoDigital(
+    id: String,
+    nome: String,
+    preco: Double,
     val urlDownload: String
 ) : ItemVenda(id, nome, preco), Serializable {
     companion object {
