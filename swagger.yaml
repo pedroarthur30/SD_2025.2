@@ -1,0 +1,400 @@
+openapi: 3.0.3
+info:
+  title: Carrinho de Compras API
+  description: |
+    API REST para gerenciamento de carrinho de compras e catálogo de produtos.
+
+    ## Tipos de Produtos
+    - **Produto Físico**: Possui peso e SKU
+    - **Produto Digital**: Possui URL de download
+    - **Serviço**: Possui duração em horas
+
+    ## Funcionalidades
+    - Catálogo com 15 produtos pré-cadastrados
+    - Busca e filtros de produtos
+    - Gerenciamento de carrinho de compras
+    - Finalização de compra
+  version: 1.0.0
+  contact:
+    name: Sistemas Distribuídos 2025.2
+    email: contato@sd.edu.br
+servers:
+  - url: http://localhost:8080
+    description: Servidor local de desenvolvimento
+
+tags:
+  - name: Produtos
+    description: Operações relacionadas ao catálogo de produtos
+  - name: Carrinho
+    description: Operações relacionadas ao carrinho de compras
+
+paths:
+  /produtos:
+    get:
+      tags:
+        - Produtos
+      summary: Lista todos os produtos disponíveis
+      description: Retorna o catálogo completo com 15 produtos pré-cadastrados (físicos, digitais e serviços)
+      responses:
+        "200":
+          description: Lista de produtos retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: "#/components/schemas/ProdutoFisico"
+                    - $ref: "#/components/schemas/ProdutoDigital"
+                    - $ref: "#/components/schemas/Servico"
+              examples:
+                exemplo:
+                  value:
+                    - id: "PF-001"
+                      nome: "Notebook Dell"
+                      preco: 3500.0
+                      peso: 2.5
+                      sku: "NB-DELL-001"
+                    - id: "PD-001"
+                      nome: "Curso de Kotlin"
+                      preco: 299.0
+                      urlDownload: "https://cursos.com/kotlin"
+                    - id: "SV-001"
+                      nome: "Consultoria em TI"
+                      preco: 500.0
+                      duracaoHoras: 4
+
+  /produtos/buscar:
+    get:
+      tags:
+        - Produtos
+      summary: Busca um produto por ID
+      description: Retorna os detalhes de um produto específico do catálogo
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: ID do produto a ser buscado
+          schema:
+            type: string
+          example: "PF-001"
+      responses:
+        "200":
+          description: Produto encontrado
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ProdutoFisico"
+                  - $ref: "#/components/schemas/ProdutoDigital"
+                  - $ref: "#/components/schemas/Servico"
+        "400":
+          description: ID não fornecido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erro"
+        "404":
+          description: Produto não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erro"
+
+  /produtos/tipo:
+    get:
+      tags:
+        - Produtos
+      summary: Filtra produtos por tipo
+      description: Retorna produtos filtrados por categoria (físico, digital ou serviço)
+      parameters:
+        - name: tipo
+          in: query
+          required: false
+          description: Tipo de produto para filtrar
+          schema:
+            type: string
+            enum: [fisico, digital, servico]
+          example: "fisico"
+      responses:
+        "200":
+          description: Lista de produtos filtrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: "#/components/schemas/ProdutoFisico"
+                    - $ref: "#/components/schemas/ProdutoDigital"
+                    - $ref: "#/components/schemas/Servico"
+
+  /carrinho:
+    get:
+      tags:
+        - Carrinho
+      summary: Lista itens do carrinho
+      description: Retorna todos os produtos adicionados ao carrinho de compras
+      responses:
+        "200":
+          description: Lista do carrinho retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: "#/components/schemas/ProdutoFisico"
+                    - $ref: "#/components/schemas/ProdutoDigital"
+                    - $ref: "#/components/schemas/Servico"
+              examples:
+                carrinho_vazio:
+                  value: []
+                carrinho_com_itens:
+                  value:
+                    - id: "PF-001"
+                      nome: "Notebook Dell"
+                      preco: 3500.0
+                      peso: 2.5
+                      sku: "NB-DELL-001"
+
+    post:
+      tags:
+        - Carrinho
+      summary: Adiciona produto customizado ao carrinho
+      description: |
+        Adiciona um produto personalizado ao carrinho. O tipo é identificado automaticamente:
+        - Se contém `peso` e `sku`: Produto Físico
+        - Se contém `urlDownload`: Produto Digital
+        - Se contém `duracaoHoras`: Serviço
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/ProdutoFisico"
+                - $ref: "#/components/schemas/ProdutoDigital"
+                - $ref: "#/components/schemas/Servico"
+            examples:
+              produto_fisico:
+                summary: Produto Físico
+                value:
+                  id: "CUSTOM-001"
+                  nome: "Mouse Gamer"
+                  preco: 250.0
+                  peso: 0.3
+                  sku: "MG-001"
+              produto_digital:
+                summary: Produto Digital
+                value:
+                  id: "CUSTOM-002"
+                  nome: "E-book Python"
+                  preco: 49.90
+                  urlDownload: "https://meusite.com/ebook"
+              servico:
+                summary: Serviço
+                value:
+                  id: "CUSTOM-003"
+                  nome: "Consultoria"
+                  preco: 300.0
+                  duracaoHoras: 2
+      responses:
+        "201":
+          description: Produto adicionado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mensagem"
+        "500":
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erro"
+
+    delete:
+      tags:
+        - Carrinho
+      summary: Limpa o carrinho
+      description: Remove todos os itens do carrinho de compras
+      responses:
+        "200":
+          description: Carrinho limpo com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mensagem"
+
+  /carrinho/adicionar:
+    post:
+      tags:
+        - Carrinho
+      summary: Adiciona produto do catálogo ao carrinho
+      description: Adiciona um produto existente no catálogo ao carrinho usando seu ID
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: ID do produto do catálogo
+          schema:
+            type: string
+          example: "PF-001"
+      responses:
+        "201":
+          description: Produto adicionado ao carrinho
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mensagem"
+        "400":
+          description: ID não fornecido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erro"
+        "404":
+          description: Produto não encontrado no catálogo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Erro"
+
+  /carrinho/finalizar:
+    post:
+      tags:
+        - Carrinho
+      summary: Finaliza a compra
+      description: Calcula o total, esvazia o carrinho e finaliza a compra
+      responses:
+        "200":
+          description: Compra finalizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensagem:
+                    type: string
+                    example: "Compra finalizada"
+                  total:
+                    type: number
+                    format: double
+                    example: 4299.0
+        "405":
+          description: Método não permitido (apenas POST é aceito)
+
+  /swagger:
+    get:
+      tags:
+        - Documentação
+      summary: Retorna a especificação OpenAPI
+      description: Retorna o arquivo swagger.yaml com a documentação completa da API
+      responses:
+        "200":
+          description: Especificação OpenAPI retornada
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+
+components:
+  schemas:
+    ProdutoFisico:
+      type: object
+      required:
+        - id
+        - nome
+        - preco
+        - peso
+        - sku
+      properties:
+        id:
+          type: string
+          description: Identificador único do produto
+          example: "PF-001"
+        nome:
+          type: string
+          description: Nome do produto
+          example: "Notebook Dell"
+        preco:
+          type: number
+          format: double
+          description: Preço do produto em reais
+          example: 3500.0
+        peso:
+          type: number
+          format: double
+          description: Peso do produto em quilogramas
+          example: 2.5
+        sku:
+          type: string
+          description: Stock Keeping Unit - código de estoque
+          example: "NB-DELL-001"
+
+    ProdutoDigital:
+      type: object
+      required:
+        - id
+        - nome
+        - preco
+        - urlDownload
+      properties:
+        id:
+          type: string
+          description: Identificador único do produto
+          example: "PD-001"
+        nome:
+          type: string
+          description: Nome do produto
+          example: "Curso de Kotlin"
+        preco:
+          type: number
+          format: double
+          description: Preço do produto em reais
+          example: 299.0
+        urlDownload:
+          type: string
+          format: uri
+          description: URL para download do produto digital
+          example: "https://cursos.com/kotlin"
+
+    Servico:
+      type: object
+      required:
+        - id
+        - nome
+        - preco
+        - duracaoHoras
+      properties:
+        id:
+          type: string
+          description: Identificador único do serviço
+          example: "SV-001"
+        nome:
+          type: string
+          description: Nome do serviço
+          example: "Consultoria em TI"
+        preco:
+          type: number
+          format: double
+          description: Preço do serviço em reais
+          example: 500.0
+        duracaoHoras:
+          type: integer
+          description: Duração estimada do serviço em horas
+          example: 4
+
+    Mensagem:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: "Produto adicionado!"
+
+    Erro:
+      type: object
+      properties:
+        erro:
+          type: string
+          example: "Produto não encontrado"
